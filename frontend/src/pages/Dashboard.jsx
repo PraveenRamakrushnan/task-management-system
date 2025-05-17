@@ -11,8 +11,10 @@ const Dashboard = () => {
 
   useEffect(() => {
     const token = new URLSearchParams(window.location.search).get('token') || localStorage.getItem('token');
+    console.log('Token from URL or localStorage:', token); // Debug
     if (token) {
       const decoded = jwtDecode(token);
+      console.log('Decoded user:', decoded.user);
       setUser(decoded.user);
       localStorage.setItem('token', token);
       axios
@@ -20,8 +22,12 @@ const Dashboard = () => {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((res) => setTasks(res.data))
-        .catch(() => navigate('/login'));
+        .catch((err) => {
+          console.error('Tasks fetch failed:', err);
+          navigate('/login');
+        });
     } else {
+      console.error('No token found, redirecting to login');
       navigate('/login');
     }
   }, [navigate]);
