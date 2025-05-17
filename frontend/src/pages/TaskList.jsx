@@ -30,14 +30,9 @@ const TaskList = () => {
   };
 
   const handlePDF = () => {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      console.error('No token found in localStorage');
-      return;
-    }
     axios
       .get('http://localhost:5000/api/tasks/pdf', {
-        headers: { Authorization: `Bearer ${token}` },
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
         responseType: 'blob',
       })
       .then((res) => {
@@ -48,8 +43,7 @@ const TaskList = () => {
         document.body.appendChild(link);
         link.click();
         link.remove();
-      })
-      .catch((err) => console.error('PDF download failed:', err.response?.data || err));
+      });
   };
 
   const sortedTasks = [...tasks]
