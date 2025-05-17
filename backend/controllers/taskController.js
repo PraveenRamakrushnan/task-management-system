@@ -83,10 +83,13 @@ exports.deleteTask = async (req, res) => {
 // Generate PDF
 exports.generatePDF = async (req, res) => {
   try {
+    console.log('User ID:', req.user.id); 
     const tasks = await Task.find({ userId: req.user.id });
+    console.log('Tasks fetched:', tasks); 
     const doc = new jsPDF();
     doc.text('Task Report', 10, 10);
     tasks.forEach((task, index) => {
+      console.log(`Task ${index + 1}:`, task.title, task.status, task.deadline);
       doc.text(
         `${index + 1}. ${task.title} - ${task.status} (Due: ${task.deadline.toDateString()})`,
         10,
@@ -94,10 +97,12 @@ exports.generatePDF = async (req, res) => {
       );
     });
     const pdf = doc.output();
+    console.log('PDF generated, sending response');
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=tasks.pdf');
     res.send(pdf);
   } catch (error) {
-    res.status(500).json({ error: 'Error generating PDF' });
+    console.error('Error in generatePDF:', error); // Debug error
+    res.status(500).json({ error: 'Error generating PDF', details: error.message });
   }
 };
