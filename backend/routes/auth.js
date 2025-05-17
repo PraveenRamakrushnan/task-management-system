@@ -10,6 +10,7 @@ router.get(
   passport.authenticate('google', { failureRedirect: '/login', session: false }),
   (req, res) => {
     const token = jwt.sign({ user: req.user }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    console.log('Generated token:', token);
     res.redirect(`http://localhost:3000/dashboard?token=${token}`);
   }
 );
