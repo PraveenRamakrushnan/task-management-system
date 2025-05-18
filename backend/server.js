@@ -20,3 +20,6 @@ app.use('/api/tasks', require('./routes/task'));
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
+// Add this after all your routes
+app.use(require('./middlewares/errorHandler'));

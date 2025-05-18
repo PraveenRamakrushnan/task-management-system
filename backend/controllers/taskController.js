@@ -1,6 +1,7 @@
 const Task = require('../models/Task');
 const { body, validationResult } = require('express-validator');
 const jsPDF = require('jspdf');
+const PDFDocument = require('pdfkit');
 
 // Create Task
 exports.createTask = [
@@ -81,31 +82,29 @@ exports.deleteTask = async (req, res) => {
 };
 
 // Generate PDF
+// Update the generatePDF function in backend/controllers/taskController.js
 exports.generatePDF = async (req, res) => {
   try {
-    console.log('User ID:', req.user.id);
     const tasks = await Task.find({ userId: req.user.id });
-    console.log('Tasks fetched:', tasks);
-    if (!tasks || tasks.length === 0) {
-      return res.status(404).json({ error: 'No tasks found for this user' });
-    }
-    const doc = new jsPDF();
-    doc.text('Task Report', 10, 10);
-    tasks.forEach((task, index) => {
-      console.log(`Task ${index + 1}:`, task.title, task.status, task.deadline);
-      doc.text(
-        `${index + 1}. ${task.title} - ${task.status} (Due: ${task.deadline.toDateString()})`,
-        10,
-        20 + index * 10
-      );
-    });
-    const pdf = doc.output();
-    console.log('PDF generated, sending response');
+    
+    const doc = new PDFDocument();
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Disposition', 'attachment; filename=tasks.pdf');
-    res.send(pdf);
+    
+    doc.pipe(res);
+    doc.fontSize(20).text('Task Report', { align: 'center' });
+    
+    tasks.forEach((task, i) => {
+      doc.fontSize(12)
+         .text(`${i+1}. ${task.title} - ${task.status}`)
+         .text(`Due: ${task.deadline.toDateString()}`)
+         .text(`Description: ${task.description}`)
+         .moveDown();
+    });
+    
+    doc.end();
   } catch (error) {
-    console.error('Error in generatePDF:', error);
-    res.status(500).json({ error: 'Error generating PDF', details: error.message });
+    console.error(error);
+    res.status(500).json({ error: 'PDF generation failed' });
   }
 };
