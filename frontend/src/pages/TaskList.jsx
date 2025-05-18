@@ -29,38 +29,52 @@ const TaskList = () => {
       .then(() => setTasks(tasks.filter((task) => task._id !== id)));
   };
 
-  const handlePDF = () => {
-    const token = localStorage.getItem('token');
-  console.log('Token from localStorage:', token);
-  if (!token) {
-    console.error('No token found in localStorage');
-    return;
-  }
-  axios
-    .get('http://localhost:5000/api/tasks/pdf', {
-      headers: { Authorization: `Bearer ${token}` },
-      responseType: 'blob',
-    })
-      .then((res) => {
-        const url = window.URL.createObjectURL(new Blob([res.data]));
-        const link = document.createElement('a');
-        link.href = url;
-        link.setAttribute('download', 'tasks.pdf');
-        document.body.appendChild(link);
-        link.click();
-        link.remove();
-      })
-      .catch((err) => {
-        console.error('PDF download failed:', err.response?.data || err);
-        if (err.response && err.response.data) {
-          const reader = new FileReader();
-          reader.onload = () => {
-            console.error('Error details:', JSON.parse(reader.result));
-          };
-          reader.readAsText(err.response.data);
+  // Update the handlePDF function in frontend/src/pages/TaskList.jsx
+const handlePDF = async () => {
+  try {
+    const response = await axios.get('http://localhost:5000/api/tasks/pdf', {
+      headers: { 
+        Authorization: `Bearer ${localStorage.getItem('token')}` 
+      },
+      responseType: 'blob'
+    });
+
+    // Create blob URL
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', 'tasks.pdf');
+    document.body.appendChild(link);
+    link.click();
+    
+    // Cleanup
+    setTimeout(() => {
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+    }, 100);
+    
+  } catch (error) {
+    console.error('PDF download failed:', error);
+    
+    // Try to read error response if it's JSON
+    if (error.response?.data?.type === 'application/json') {
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const errorData = JSON.parse(reader.result);
+          console.error('Server error details:', errorData);
+          alert(`PDF generation failed: ${errorData.error || errorData.message}`);
+        } catch (e) {
+          console.error('Error parsing error response:', e);
+          alert('Failed to generate PDF (unknown error format)');
         }
-      });
-  };
+      };
+      reader.readAsText(error.response.data);
+    } else {
+      alert('Failed to generate PDF. Please check console for details.');
+    }
+  }
+};
 
   const sortedTasks = [...tasks]
     .filter((task) => task.title.toLowerCase().includes(search.toLowerCase()))
