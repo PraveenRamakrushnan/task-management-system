@@ -18,8 +18,9 @@ mongoose.connect(process.env.MONGODB_URI, {
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/tasks', require('./routes/task'));
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(process.env.PORT || 5000, () => {
+  console.log(`Server running on port ${process.env.PORT || 5000}`);
+});
 
 // Add this after all your routes
 app.use(require('./middlewares/errorHandler'));
